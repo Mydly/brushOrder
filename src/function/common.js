@@ -4,6 +4,7 @@ const settings = require('electron-settings');
 const CONSTS = require('../config/consts');
 const Lang =  require('../config/lang');
 const assert = require('assert');
+const check = require('mydly-check');
 
 const COMMON = {
     mem:mem,
@@ -29,6 +30,7 @@ const COMMON = {
     getSecret:getSecret,
     clearStore:clearStore,
     showLang:showLang,
+    getDateTime:getDateTime
 }
 
 function mem() {
@@ -63,6 +65,7 @@ function mem() {
 }
 
  function alog (log, type) {
+     if(!log) return;
     console.log(log);
 }
 
@@ -214,13 +217,22 @@ function settingSet(key,value){
 
 function settingGet(key){
     let value = settings.get( encodeData(key) );
-    return  value ? decodeData( value ) : null;
+    value = value ? decodeData(value) : null;
+    return check.isStringOfJson(value) ? JSON.parse(value) : value;
 }
 
 function settingHas(key){
     return settings.has( encodeData(key) );
 }
 
+
+/**
+ * time & date
+ */
+function getDateTime(){
+    let now = new Date();
+    return now.toLocaleDateString()+" "+now.toLocaleTimeString();
+}
 
 /**
  * app 应用方法

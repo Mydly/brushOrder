@@ -61,6 +61,7 @@ module.exports = {
         new CopyWebpackPlugin([
             { from: path.resolve(SRC_PATH, 'main.js'), to: path.resolve(APP_PATH,'main.js') },
             { from: path.resolve(SRC_PATH, 'icon.icns'), to: path.resolve(APP_PATH,'icon.icns') },
+            { from: path.resolve(SRC_PATH, 'icon.ico'), to: path.resolve(APP_PATH,'icon.ico') },
             { from: path.resolve(SRC_PATH, 'index.html'), to: path.resolve(APP_PATH,'index.html') },
             { from: path.resolve(SRC_PATH, '../package.json'), to: path.resolve(APP_PATH,'package.json') },
             { from: path.resolve(SRC_PATH, 'config'), to: path.resolve(APP_PATH,'config') },

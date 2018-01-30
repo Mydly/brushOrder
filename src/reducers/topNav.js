@@ -1,14 +1,10 @@
 import Consts from '../config/consts';
-const {login } = Consts;
 import COMMON from '../function/common';
 
 
 let initState =  {
-        tabBar:"index",
-        lastTab:"index",
-        newAddressStatus:0,
-        newAddressMsg:"init",
-        lang:COMMON.getLang()
+        tabBar:"app",
+        lastTab:"app"
     };
 
 export default function changeTab(state = initState, action) {

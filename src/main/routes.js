@@ -5,14 +5,6 @@ import querystring from 'querystring';
 
 import '../static/style/common.scss';
 
-import Nav from '../component/view/Nav';
-
-import Index from '../component/view/Index';
-import Send from '../component/view/Send';
-import Receive from '../component/view/Receive';
-import Setting from '../component/view/Setting';
-import Start from '../component/view/Start';
-
 const electron = require('electron');
 const app = electron.app || electron.remote.app;
 
@@ -20,20 +12,38 @@ import CONSTS from '../config/consts';
 import { getWalletInfo } from '../actions/topNav';
 import COMMON from '../function/common';
 
-import { message, Form } from 'antd';
 
 
 import Config from '../config/config';
 
 import Request from './requests';
+import myReq from 'mydly-request';
+import myCheck from 'mydly-check';
+// import mydlyui  from '../component/mydlyui/index.js';
+import TradeWatch from '../component/order/TradeWatch';
+import TradeSetting from '../component/order/TradeSetting';
 
-import Test from '../component/view/Test';
+import TradeApi from './api';
+import {showMsg, cancelMsg} from '../actions/alert';
+
+import { Menu, Icon, message, Form, Spin,Alert} from 'antd';
+const SubMenu = Menu.SubMenu;
+const MenuItemGroup = Menu.ItemGroup;
 
 const assert = require('assert');
 
 class RouteList extends React.Component{
     constructor(props) {
         super(props);
+
+        let {host=0,
+            userid=0,
+            publicKey=0,
+            privateKey=0} = this.props;
+        this.tradeApi = null;
+        if( host && userid && publicKey && privateKey ){
+            this.tradeApi = new TradeApi(host,userid,publicKey,privateKey);
+        }
 
         this.state = {
             running:false, 
@@ -42,21 +52,22 @@ class RouteList extends React.Component{
             requestMethod:'GET',
             paramCom:[],
             paramData:{},
-            html:null
+            isCurl:false,
+            html:null,
+            
+            selectedMenu:'app',
+
         };
 
         this.requestData = this.requestData.bind(this);
-        this.__inputUrl = this.__inputUrl.bind(this);
-        this.__inputTime = this.__inputTime.bind(this);
-        this.__addParamItem = this.__addParamItem.bind(this);
-        this.__delParamItem = this.__delParamItem.bind(this);
-        this.__inputParam = this.__inputParam.bind(this);
-        this.__start_stop = this.__start_stop.bind(this);
+        this.__testBuy = this.__testBuy.bind(this);
 
 
     }
 
     requestData(force){
+
+
         if(!this.state.running && !force){
             COMMON.alog('运行开关未打开');
             return;
@@ -98,32 +109,75 @@ class RouteList extends React.Component{
             }
         }
 
+        let method = this.state.requestMethod;
         // 处理url
         url = url.indexOf("http") >= 0 ? url : "http://"+url;
+        let data = getParam;
+        switch (method) {
+            case 'POST':
+                data = postParam;
+                break;
+            case 'PUT':
+                data = putParam;
+                break;
+            default:
+                data = getParam;
+                break;
+        }
                      
         let option = {
             url:url,
-            method:this.state.requestMethod,
-            data:postParam,
-            header:headers
+            method:method,
+            data:data,
+            header:headers,
+            isCurl:this.state.isCurl
         };
-        Request(option,(res)=>{
+
+        myReq.send(option,(err,res,body)=>{
             
-                            if(COMMON.isJsonOfString(res)){
-                                COMMON.alog(JSON.parse(res));
+                            if(COMMON.isJsonOfString(body)){
+                                COMMON.alog(JSON.parse(body));
                                 this.setState({
                                     html:null
                                 })
                             }else {
-                                COMMON.alog(res);
+                                COMMON.alog(body);
                                 this.setState({
                                     html:url
                                 })
                             }
                         });
-
-        
                 
+    }
+
+    __refreshData(){
+        if(!this.tradeApi){
+            message.warning('请先设置好账号信息');
+            return;
+        }
+
+    }
+
+    __testBuy(){
+        console.log('testbuy');
+        console.log(this.state.selectedMenu);
+    }
+
+    __testSell(){
+
+    }
+
+    __selectMarket(){
+
+    }
+
+    __methodList(){
+        return {
+            __refreshData:this.__refreshData,
+            __testBuy:this.__testBuy,
+            __testSell:this.__testSell,
+            __selectMarket:this.__selectMarket
+        }
     }
 
     //组件初始化
@@ -138,206 +192,95 @@ class RouteList extends React.Component{
 
     //组件已经更新
     componentDidUpdate(){
-        // COMMON.alog('router com update');
+
+        let {alert = false,msg,msgLevel} = this.props;
+        let {cancelMsg} = this.props;
+        if(alert){
+            switch(msgLevel){
+                case 'error':
+                message.error(msg);
+                case 'warning':
+                message.warning(msg);
+                default:
+                message.success(msg);
+            }
+            cancelMsg();
+        }
        
-    }
-
-    handleLogin(e){
-        e.preventDefault();
-        console.log(e);
-        const {change} = this.props;
-        change(PageKey.login.key);
-    }
-
-
-    __addParamItem(){
-        
-        let paramCom = this.state.paramCom || [];
-
-        let keyIndex = paramCom.length+1;
-        let newParam = 
-            <div key={"param_"+keyIndex} name={"param_"+keyIndex} >
-                <select name={"sel_"+keyIndex} 
-                    style={{margin:"5px 20px"}}
-                    defaultValue={this.state.requestMethod || "GET"}
-                    onChange={this.__inputParam}
-                    >
-                    <option value="GET">GET</option>
-                    <option value="POST">POST</option>
-                    <option value="PUT">PUT</option>
-                    <option value="Header">Header</option>
-                </select>
-                <input name={"key_"+keyIndex}
-                 style={{width:80}} onChange={this.__inputParam} />
-                <input name={"value_"+keyIndex} 
-                    onChange={this.__inputParam} />
-                <button name={"btn_"+keyIndex} 
-                    style={{padding:"2px 5px"}} 
-                    onClick={this.__delParamItem}
-                    >删除</button>
-            </div>
-        paramCom.push(newParam);
-        this.setState({
-            paramCom:paramCom
-        })
-    }
-
-    __delParamItem(event){
-
-        
-        let paramCom = this.state.paramCom || [];
-        if(!paramCom) return;
-        let paramData = this.state.paramData || {};
-
-        let name = event.target.name;
-        let keyIndex = name.split('_')[1];
-        assert.notEqual(typeof keyIndex,'undefined','组件name索引错误');
-        let key = "param_"+keyIndex;
-        paramData[key] && delete paramData[key];
-        
-        paramCom[keyIndex-1] &&  delete paramCom[keyIndex-1];
-
-        this.setState({
-            paramCom:paramCom
-        });
-
-
-
-    }
-
-    __inputParam(event){
-        
-        let name = event.target.name;
-        let value = event.target.value;
-        let keyIndex = name.split('_')[1];
-        let keyType = name.split('_')[0];
-        if (keyType == "sel") {
-            this.setState({
-                requestMethod:value
-            });
-        }
-        
-        assert.notEqual(typeof keyIndex,'undefined','组件name索引错误');
-        let paramData = this.state.paramData;
-        let key = "param_"+keyIndex;
-        if( paramData[key] ){
-            let oldObj = paramData[key];
-            oldObj[keyType] = value;
-        }
-        else {
-            let newObj = {};
-            newObj[keyType] = value;
-            paramData[key] = newObj;
-        }
-
-        // console.log(this.state.paramData);
-        
-    }
-
-    __inputUrl(event){
-        this.setState({
-            url:event.target.value
-        });
-    }
-
-    __inputTime(event){
-        let time = event.target.value
-        this.setState({
-            loopTime:time*1000
-        });
-    }
-
-    __start_stop(){
-        let running = this.state.running;
-        if(running){
-            clearInterval(this.state.timerId);
-            this.setState({
-                running:false,
-                timerId:0
-            })
-        }else{
-            if(this.state.loopTime <= 0){
-                this.requestData(1);
-            }else{
-                assert.equal( isNaN(this.state.loopTime) , false , "循环次数必须是数字" )
-                let timerId = setInterval(this.requestData,this.state.loopTime);
-                this.setState({
-                    running:true,
-                    timerId:timerId
-                })
-                this.requestData(1);
-            } 
-        }
-        
     }
 
     render(){
 
-        
-        let paramComponent = this.state.paramCom || [];
-        let width = window.innerWidth;
-        
+        let {loadMsg, load} = this.props;
+        let Content = this.state.selectedMenu == 'app' ? <TradeWatch tradeApi={this.tradeApi} methodList={this.__methodList()} /> : <TradeSetting />;
+        let LoadCom = null;
+        if(load){
+            if(loadMsg == ""){
+                LoadCom = <Spin size="large" style={{position:"absolute",top:"50%",left:"50%"}} />;
+            }else {
+                LoadCom = <Spin size="large" style={{position:"absolute",top:"50%",left:"50%"}} >
+                <Alert
+                message="加载中，请稍候"
+                description=""
+                type="info"
+                />
+            </Spin>
+            }
+        }
 
-        return (
-            <div>
-                <div style={{float:"left",width:400}}>
-                    <div style={{margin:"20px 20px"}}>
-                        <div>地址</div>
-                        <input contentEditable={!this.state.running} onChange={this.__inputUrl} placeholder="请输入地址" style={{width:320}} />
-                    </div>
-                    <div style={{margin:"20px 20px"}}>
-                        <div>循环时间间隔</div>
-                        <input onChange={this.__inputTime} placeholder="单位:秒,默认执行一次" style={{width:320}} />
-                    </div>
-                    <div style={{margin:"20px 20px"}}>
-                        <button onClick={this.__addParamItem} 
-                        style={{marginLeft:0,padding:"10px 20px"}}
-                        >添加参数</button>
-                        <span style={{marginLeft:0,padding:"10px 20px"}}><input name="Curl" type="checkbox" value="Curl" /> Curl</span>
-                        
-                       <span style={{marginLeft:0}}> 
-                        <select name={"sel_"} 
-                                style={{margin:"5px 10px"}}
-                                defaultValue={this.state.requestMethod || "GET"}
-                                onChange={(e)=>{this.setState({requestMethod:e.target.value})}}
-                                >
-                                <option value="GET">GET</option>
-                                <option value="POST">POST</option>
-                                <option value="PUT">PUT</option>
-                            </select>
-                        </span>
-                        <button onClick={this.__start_stop} 
-                        style={ Object.assign({},{marginLeft:20,padding:"10px 20px",color:"white"},
-                                this.state.running?
-                                {backgroundColor:"#09a800"}:
-                                {backgroundColor:"#E74E19"})}
-                        >{this.state.running? "暂停" : "开始"}</button>
-                    </div>
-                    {paramComponent}
-                </div>
-                <div style={{position:"absolute",left:400,height:"100vh",borderLeft:"solid 1px #999"}}>
-                    { this.state.html ? React.createElement("iframe",{src:this.state.html,allowFullScreen:true,height:"100%",width:width}) : null }
-                </div>
-
-            </div>
-        );
+        <div style={{width:'100%',height:'100%',position:'fixed',background:'#000',opacity:0.1}}>
+        <Spin size="large" style={{position:"absolute",top:"50%",left:"50%"}} >
+            <Alert
+            message="加载中，请稍候"
+            description=""
+            type="info"
+            />
+        </Spin> 
+        </div>;
+        
+        return (<div>
+            {LoadCom}
+            <Menu
+                onClick={(res)=>{this.setState({selectedMenu:res.key})}}
+                selectedKeys={[this.state.selectedMenu]}
+                mode="horizontal"
+            >
+                    <Menu.Item key="app">
+                        <Icon type="appstore" />模拟交易
+                    </Menu.Item>
+                    <Menu.Item key="setting">
+                        <Icon type="setting" />基本设置
+                    </Menu.Item>
+            </Menu>
+            {Content}
+        </div>);
+        
     }
 }
 
 function mapStateToProps(state) {
 
     return {
-        tabBar: state.topNav.tabBar,
-        lastBar:state.topNav.lastBar,
-        alert:state.alert,
-        userinfo:state.topNav.userinfo,
-        haveToken:state.topNav.haveToken || false
+        host:state.settings.host,
+        userid:state.settings.userid,
+        publicKey:state.settings.publicKey,
+        privateKey:state.settings.privateKey,
+        msg:state.alert.msg,
+        alert:state.alert.alert,
+        msgLevel:state.alert.msgLevel,
+        load:state.alert.load,
+        loadMsg:state.alert.loadMsg
     };
 }
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        
+        showMsg:(msg, msgLevel) => {
+            dispatch(showMsg(msg, msgLevel));
+        },
+        cancelMsg:()=>{
+            dispatch(cancelMsg());
+        },
     }
 }
 

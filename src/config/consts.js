@@ -72,6 +72,11 @@ const CacheName = {
     secret:"USER_SECRET",     //用户密码+公钥+私钥
     lang:"APP_LANG",            //app语言
     coinName:"COINNAME",        //币种名
+
+    apiSettings:"API_Settings",  //存储API的字段
+    selectMarket:"selectMarket",  //已选择的市场
+    buyOrderSetting:"buyOrderSetting", //买单存储设置
+    sellOrderSetting:"sellOrderSetting" //卖单存储设置
 }
 
 const API = {
@@ -81,6 +86,9 @@ const API = {
     startGetMyFinan:"StartGetMyFinan",
     failGetMyFinan:"FinishGetMyFinan",
     successGetMyFinan:"successGetMyFinan",
+
+    requestAllMarket:"RequestAllMarket",
+    requestBalance:"RequestBalance"
 
 }
 
@@ -110,7 +118,15 @@ const Actions = {
     requestCoinList:"requestCoinList",
     selectCoin:"selectCoin",
     selectLang:"selectLang",
-    transDone:"transDone"
+    transDone:"transDone",
+
+    saveAPISettings:"saveAPISettings",
+    showMsg:"showMsgAction",
+    cancelMsg:"cancelMsgAction",
+    showLoad:"showLoadAction",
+    removeLoad:"removeLoadAction",
+    addLog:"addRunLog",
+    cancelGuadan:"cancelGuadan"
 }
 
 const consts = {

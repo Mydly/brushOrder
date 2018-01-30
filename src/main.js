@@ -92,13 +92,10 @@ function createWindow () {
         })
     }
 
-    console.log(debug2);
 
         const menu = Menu.buildFromTemplate(menuData)
         Menu.setApplicationMenu(menu)
 
-        let user_token = Common.settingHas(Consts.cacheName.secret);
-        
         let windowSize = {width: 1200, height: 800};
         mainWindow = new BrowserWindow( windowSize );
         
@@ -168,11 +165,5 @@ ipcMain.on('toMainSize', (event, arg) => {
     mainWindow.setSize(1200,800);
 
 })
-
-function appConf(){
-    return {
-        title:"动说币钱包"
-    };
-}
 
 

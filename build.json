@@ -1,5 +1,5 @@
 {
-    "appId": "com.movesay.moveTool",
+    "appId": "com.movesay.brush-order-tool",
     "mac": {
       "icon":"./app/icon.icns"
     },
