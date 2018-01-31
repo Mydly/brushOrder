@@ -4,13 +4,16 @@ import CONSTS from '../../config/consts';
 import CONFIG from '../../config/config';
 import COMMON from '../../function/common';
 
-import {getMarket, getBalance, sendTran, getGuadanList, cancelOrder} from '../../actions/trade';
+import {getMarket, getBalance, sendTran,
+     getGuadanList, cancelOrder, getTradeLog } from '../../actions/trade';
 import {showLoad,removeLoad,showMsg} from '../../actions/alert';
 
 import {connect} from 'react-redux';
 
 import '../../static/style/common.scss';
-import { Menu, Icon, message, Form, Row, Col, Button, Select, Input, Checkbox, Tabs} from 'antd';
+import { Menu, Icon, message, Form, Row, Col, Button, Select,
+     Input, Checkbox, Tabs, Table} from 'antd';
+import { calendarFormat } from 'moment';
 const FormItem = Form.Item;
 const TabPane = Tabs.TabPane;
 
@@ -34,8 +37,11 @@ class TradeWatch extends React.Component {
         this.__startRun = this.__startRun.bind(this);
         this.__runLog = this.__runLog.bind(this);
         this.__clearOrder = this.__clearOrder.bind(this);
+        this.__tabChange = this.__tabChange.bind(this);
+        this.__requestTradeLog = this.__requestTradeLog.bind(this);
        
         let {selectMarket = ""} = this.props;
+        selectMarket = selectMarket ? selectMarket : "";
         let coinArr = selectMarket.split("_");
         let market_coin = 0;
         let market_cny = 0;
@@ -88,7 +94,8 @@ class TradeWatch extends React.Component {
             buyTimer:0,
             buyClearTimer:0,
             sellTimer:0,
-            sellClearTimer:0
+            sellClearTimer:0,
+            messionTimer:0,
         }
 
     }
@@ -107,7 +114,7 @@ class TradeWatch extends React.Component {
     componentDidUpdate(){
 
         let runlogDom = this.refs.runLog;
-        runlogDom.scrollTop = runlogDom.scrollHeight - 150;
+        runlogDom.scrollTop = runlogDom.scrollHeight - 270;
     }
 
     saveMarket(market){
@@ -129,11 +136,6 @@ class TradeWatch extends React.Component {
         let state = `{ "${idName}" : "${value}" }`;
 
         this.setState(JSON.parse(state));
-    }
-
-    __requestBalance(){
-        let { tradeApi, getBalance } = this.props;
-        getBalance && getBalance(tradeApi);
     }
 
     __selectMarket(e){
@@ -246,6 +248,20 @@ class TradeWatch extends React.Component {
         getMarket && getMarket(tradeApi);
         this.__requestBalance();
 
+    }
+
+    __requestBalance(){
+        let { tradeApi, getBalance } = this.props;
+        getBalance && getBalance(tradeApi);
+    }
+
+    __requestTradeLog(){
+        let {tradeApi, getTradeLog } = this.props;
+        let {selectMarket } = this.state;
+        getTradeLog && getTradeLog(tradeApi,{
+            market:selectMarket,
+            page:0
+        }); 
     }
 
     __testBuy(){
@@ -458,13 +474,60 @@ class TradeWatch extends React.Component {
                 </span>
                 </div>
         });
-        return <div ref="runLog" style={{height:150,overflow:'scroll'}}>
+        return <div ref="runLog" style={{height:270,overflow:'scroll'}}>
             {logCom}
         </div>;
     }
 
     __tradeLog(){
-        return <div>运行记录</div>;
+
+        // return <div></div>;
+        let {tradeLog } = this.props;
+
+        const columns = [{
+            title: 'ID',
+            dataIndex: 'id',
+            width: '20%'
+          }, {
+            title: '交易类型',
+            dataIndex: 'type',
+            width: '20%',
+            render:type=>type == 'buy'?'买入':'卖出'
+          }, {
+            title: '价格',
+            dataIndex: 'price',
+          }, {
+            title: '数量',
+            dataIndex: 'amount',
+          }, {
+              title:'时间',
+              dataInde:'time',
+              render:item=>{
+                  let time = item.time;
+                  let date = new Date( parseInt(time + "000") );
+                  return date.toLocaleDateString()+ " " + date.toLocaleTimeString();
+              }
+          }];
+
+          
+        return <div >
+            <Table
+                columns={columns}
+                dataSource={tradeLog}
+                loading={false}
+                size={"small"}
+                scroll={ {x:false,y:false}}
+                pagination={{
+                    pageSize:6
+                }}
+            />
+        </div>;
+    }
+
+    __tabChange(e){
+        if(e == 2){
+            this.__requestTradeLog();
+        }
     }
 
     render() {
@@ -759,7 +822,7 @@ class TradeWatch extends React.Component {
                 </Col>
             </Row>
             <div {...borderPro}>
-                <Tabs defaultActiveKey="1">
+                <Tabs defaultActiveKey="1" onChange={this.__tabChange}>
                     <TabPane tab="运行日志" key="1">
                         {this.__runLog()}
                     </TabPane>
@@ -778,7 +841,8 @@ const mapStateToProps = (state) => {
             balanceList:state.trade.balanceList,
             market:state.trade.market,
             selectMarket:state.trade.selectMarket,
-            logData:state.trade.logData
+            logData:state.trade.logData,
+            tradeLog:state.trade.tradeLog
         };
 }
     
@@ -807,6 +871,9 @@ const mapDispatchToProps = (dispatch) => {
         },
         cancelOrder:(tradeApi,option,call)=>{
             dispatch(cancelOrder(tradeApi,option,call));
+        },
+        getTradeLog:(tradeApi,option,call)=>{
+            dispatch(getTradeLog(tradeApi,option,call));
         }
     }
 }

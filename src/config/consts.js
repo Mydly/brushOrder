@@ -88,7 +88,8 @@ const API = {
     successGetMyFinan:"successGetMyFinan",
 
     requestAllMarket:"RequestAllMarket",
-    requestBalance:"RequestBalance"
+    requestBalance:"RequestBalance",
+    requestTradeLog:"requestTradeLog"
 
 }
 

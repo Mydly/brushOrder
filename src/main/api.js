@@ -94,6 +94,21 @@ export default class {
       this._sendReq(opt,callback,recRespond,retFail);
   }
 
+  _getTradeLog(option,callback,recRespond,retFail){
+    let nonce = this._nonce();
+    let sign = this._sign(nonce);
+    let opt = {
+        url:this._host+this._makeApi('list_trade'),
+        method:'post',
+        data:Object.assign({},{
+            key:this._key,
+            nonce:nonce,
+            signature:sign
+        },option)
+    }
+    this._sendReq(opt,callback,recRespond,retFail);
+  }
+
   _makeApi(name){
       return '/api/trade/'+name;
   }

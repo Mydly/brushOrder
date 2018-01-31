@@ -1,3 +1,4 @@
+
 const Consts = require('../config/consts');
 const COMMON = require('../function/common');
 
@@ -24,6 +25,10 @@ export default function trade(state = initState, action) {
             }
             logData.push(action.data);
             return Object.assign({}, state, {logData:logData});
+        case Consts.api.requestTradeLog:
+            return Object.assign({}, state, {
+                tradeLog:action.data
+            });
         default:
             return state;
     }

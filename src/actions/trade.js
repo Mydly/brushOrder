@@ -116,9 +116,24 @@ export const cancelOrder = (tradeApi, option, callback) => {
                     action:"cancel_guadan",
                     time:COMMON.getDateTime(),status:0
                 }) ));
-                
-                
+                 
             }
         }, 0, requestFail(dispatch));
+    }
+}
+
+export const getTradeLog = (tradeApi, option, call) => {
+    return (dispatch) => {
+        tradeApi._getTradeLog(option, (res)=> {
+            if(res.err){
+                dispatch(showMsgAction("获取交易记录失败,"+res.err,'warning'));
+            }else{
+                dispatch({
+                    type:CONSTS.api.requestTradeLog,
+                    data:res.succ
+                });
+                 
+            }
+        }, 0 , requestFail(dispatch));
     }
 }

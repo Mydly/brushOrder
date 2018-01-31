@@ -1,6 +1,8 @@
 node_modules
 app
 dist
+test
+lock_backup.json
 .idea
 yarn-error.log
 

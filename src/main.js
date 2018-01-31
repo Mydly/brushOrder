@@ -23,7 +23,7 @@ const Consts = require('./config/consts');
 const fs = require('fs');
 
 
-const debug = 1;
+const debug = 0;
 const debug2 = /--debug/.test(process.argv[2])
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -114,7 +114,7 @@ function createWindow () {
         //mainWindow.loadURL('http://demo.movesay.com')
     
         // Open the DevTools.
-        !debug || mainWindow.webContents.openDevTools()
+        debug && mainWindow.webContents.openDevTools()
 
         // Emitted when the window is closed.
         mainWindow.on('closed', function () {
