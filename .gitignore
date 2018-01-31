@@ -1,8 +1,10 @@
 node_modules
 app
 dist
+.svn
 test
 lock_backup.json
 .idea
 yarn-error.log
+
 
