@@ -1,2 +1,0 @@
-export const HttpHost = 'http://ming.a.com';  //dev
-//export const HttpHost = 'http://demo.movesay.com';  //dis

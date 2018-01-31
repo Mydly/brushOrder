@@ -1,9 +1,0 @@
-import path from 'path';
-export const HttpHost = 'http://ming.a.com';  //dev
-//export const HttpHost = 'http://demo.movesay.com';  //dis
-
-export default {
-    __Static:path.resolve(__dirname, 'src/static'),
-    __Component:path.resolve(__dirname, 'src/component'),
-    __Action:path.resolve(__dirname, 'src/actions'),
-}
